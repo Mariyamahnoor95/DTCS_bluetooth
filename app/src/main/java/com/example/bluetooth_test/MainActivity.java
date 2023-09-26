@@ -34,6 +34,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -43,9 +44,11 @@ import java.util.Set;
 import java.util.UUID;
 
 
+
 import com.github.pires.obd.commands.control.TroubleCodesCommand;
 import com.github.pires.obd.commands.protocol.EchoOffCommand;
 import com.github.pires.obd.commands.protocol.LineFeedOffCommand;
+
 import com.github.pires.obd.commands.protocol.ObdRawCommand;
 import com.github.pires.obd.commands.protocol.SelectProtocolCommand;
 import com.github.pires.obd.commands.protocol.TimeoutCommand;
@@ -65,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
 
     private BluetoothAdapter bluetoothAdapter;
     private ArrayAdapter<String> pairedDevicesArrayAdapter;
-    //    private TextView dtcTextView;
+        private TextView dtcTextView;
     private PrintWriter logWriter;
     private static final String LOG_TAG = "DTCApp";
 
@@ -73,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-// dtcTextView = findViewById(R.id.dtcTextView);
+        dtcTextView = findViewById(R.id.dtc_text_view);
         ListView pairedListView = (ListView) findViewById(R.id.paired_devices);
         pairedDevicesArrayAdapter = new ArrayAdapter<>(this, R.layout.device_name);
 
@@ -174,7 +177,8 @@ public class MainActivity extends AppCompatActivity {
                     sendOBDCommand(socket, "ATZ");     // Reset the OBD II device
                     sendOBDCommand(socket, "ATSP0");   // Set OBD II protocol to automatic
 
-                    // Send the command to retrieve DTCs (replace with the appropriate command)
+
+                        // Send the command to retrieve DTCs (replace with the appropriate command)
                     String dtcCommand = "ATH1";
                     sendOBDCommand(socket, dtcCommand);
 
@@ -182,7 +186,10 @@ public class MainActivity extends AppCompatActivity {
                     String dtcResponse = readOBDResponse(socket);
                     Log.d(LOG_TAG, "DTCs: " + dtcResponse);
 
-                    // Close the socket when done
+//
+//
+
+                        // Close the socket when done
                     socket.close();
                 } }catch (IOException e) {
                     e.printStackTrace();
@@ -193,6 +200,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+
     private void sendOBDCommand(BluetoothSocket socket, String command) {
         try {
             OutputStream outputStream = socket.getOutputStream();
@@ -225,73 +233,6 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    private void fetchDTCs(BluetoothSocket socket) {
-        try {
 
-            // Get the input and output streams
-            InputStream inputStream = socket.getInputStream();
-            OutputStream outputStream = socket.getOutputStream();
 
-            // Create a new TroubleCodesCommand
-            TroubleCodesCommand troubleCodesCommand = new TroubleCodesCommand();
-
-            // Run the TroubleCodesCommand
-            troubleCodesCommand.run(inputStream, outputStream);
-
-            // Get the result
-            String result = troubleCodesCommand.getFormattedResult();
-
-            // TODO: Do something with the result
-            System.out.println("DTCs: " + result);
-
-        } catch (IOException | InterruptedException | NoDataException | UnsupportedCommandException | UnableToConnectException | UnknownErrorException e) {
-            // Handle exceptions
-            e.printStackTrace();
-        }
-    }
-
-    private void logMessage (String message ){
-        Log.d(LOG_TAG , message);
-        if(logWriter != null){
-            logWriter.println(message);
-            logWriter.flush();
-
-        }
-    }
-
-    private void manageConnectedSocket(BluetoothSocket socket) {
-        // Start a thread to listen for incoming data
-        new Thread(() -> {
-            try {
-                InputStream inputStream = socket.getInputStream();
-                byte[] buffer = new byte[1024];  // buffer store for the stream
-                int bytes; // bytes returned from read()
-
-                // Keep listening to the InputStream until an exception occurs
-                while (true) {
-                    try {
-                        // Read from the InputStream
-                        bytes = inputStream.read(buffer);
-                        // Send the obtained bytes to the UI activity
-                        // mHandler.obtainMessage(MESSAGE_READ, bytes, -1, buffer).sendToTarget();
-                    } catch (IOException e) {
-                        break;
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }).start();
-
-        // Start a thread to send data
-        new Thread(() -> {
-            try {
-                OutputStream outputStream = socket.getOutputStream();
-                String message = "Hello, Bluetooth!";
-                outputStream.write(message.getBytes());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }).start();
-    }
 }
